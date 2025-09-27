@@ -1,0 +1,16 @@
+#Qn1 
+
+f1=open('hello.txt','r')
+f2=open("new.txt","w")
+l=f1.readlines()
+f2.writelines(l)
+f1.close()
+f2.close()
+#QN2
+
+try:
+    f2=open("ne.txt","r")
+    f2.read()
+    f2.close()
+except:
+    print("file not found")
