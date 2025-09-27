@@ -1,0 +1,10 @@
+class vehicle:
+    def __init__(self,wheels,make,move):
+        self.wheels=wheels
+        self.make=make
+        self.move=move
+plane=vehicle(4,"Boeing","Fly")
+
+print(plane.move)
+
+
