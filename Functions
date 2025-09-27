@@ -1,0 +1,21 @@
+#Q1
+def calculate_discount(price, discount_percent):
+    if discount_percent>=20:
+        new_price=price-(price*discount_percent)/100
+        return new_price
+    else:
+        return price
+print(calculate_discount(100,20))
+
+#Q2
+
+
+def calculate_discount():
+    price=float(input("Enter the price"))
+    discount=float(input("enter Percentage discount"))
+    if discount>=20:
+        new_price=price-(price*discount)/100
+        return new_price
+    else:
+        return price
+print(calculate_discount())
