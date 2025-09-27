@@ -1,0 +1,91 @@
+import requests
+import os
+import time
+import mimetypes
+import hashlib
+from urllib.parse import urlparse
+
+# Store hashes of downloaded images to prevent duplicates
+downloaded_hashes = set()
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB safety limit
+
+def get_file_hash(filepath):
+    """Compute SHA256 hash of a file."""
+    hasher = hashlib.sha256()
+    with open(filepath, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+def fetch_image(url):
+    try:
+        os.makedirs("Fetched_Images", exist_ok=True)
+
+        response = requests.get(url, timeout=10, stream=True)
+        response.raise_for_status()
+
+        # Check important headers
+        content_type = response.headers.get("Content-Type", "")
+        content_length = response.headers.get("Content-Length")
+
+        if "image" not in content_type.lower():
+            print(f"✗ Skipped (not an image): {url}")
+            return
+
+        if content_length and int(content_length) > MAX_FILE_SIZE:
+            print(f"✗ Skipped (file too large > {MAX_FILE_SIZE//1024//1024}MB): {url}")
+            return
+
+        # Extract filename
+        parsed_url = urlparse(url)
+        filename = os.path.basename(parsed_url.path)
+
+        if not filename:
+            filename = "downloaded_image"
+
+        # Add extension if missing
+        if not os.path.splitext(filename)[1]:
+            ext = mimetypes.guess_extension(content_type.split(";")[0])
+            filename += ext if ext else ".jpg"
+
+        filepath = os.path.join("Fetched_Images", filename)
+
+        # Save image in chunks
+        with open(filepath, "wb") as f:
+            for chunk in response.iter_content(1024):
+                f.write(chunk)
+
+        # Compute hash for duplicate detection
+        file_hash = get_file_hash(filepath)
+        if file_hash in downloaded_hashes:
+            print(f"✗ Duplicate image skipped: {filename}")
+            os.remove(filepath)
+            return
+        else:
+            downloaded_hashes.add(file_hash)
+
+        print(f"✓ Fetched: {filename}")
+        print(f"✓ Saved at {filepath}")
+        print(f"ℹ Headers checked: Content-Type={content_type}, Content-Length={content_length}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"✗ Connection error: {e}")
+    except Exception as e:
+        print(f"✗ An error occurred: {e}")
+
+def main():
+    print("Welcome to the Ubuntu Image Fetcher")
+    print("Fetch multiple images from the web safely and mindfully\n")
+
+    while True:
+        urls = input("Enter image URLs separated by space (or 'exit' to quit): ").strip()
+        if urls.lower() == "exit":
+            break
+
+        for url in urls.split():
+            fetch_image(url)
+
+    print("\nConnection strengthened. Community enriched.")
+
+if __name__ == "__main__":
+    main()
